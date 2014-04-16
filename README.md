@@ -13,7 +13,7 @@ You need a *nix based machine with [SOX](http://sox.sourceforge.net/) with mp3 h
 
 Currenty, the script is tested on Ubuntu 13.10 (Saucy Salamander) and Debian GNU/Linux 7 (Wheezy)
 
-## Installation tutorial for Saucy Salamander and Wheezy
+## Installation tutorial for Ubuntu and Debian
 
 ```bash
 sudo apt-get install sox
