@@ -9,8 +9,7 @@ We have a dog. When he hears a slightest noise at night, he has no second though
 So I thought. Why not make a script, that monitors the volume in the room and when it reaches a predefined point (e.g dog bark), random mp3 starts playing.
 
 ## I want it, what do I need?
-
-You need a *nix based machine with [http://sox.sourceforge.net/](SOX) with mp3 handler (libsox-fmt-mp3) installed on it.
+You need a *nix based machine with [SOX](http://sox.sourceforge.net/) with mp3 handler (libsox-fmt-mp3) installed on it.
 
 Currenty, the script is tested only on Ubuntu 13.10
 
