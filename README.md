@@ -11,9 +11,9 @@ So I thought. Why not make a script, that monitors the volume in the room and wh
 ## I want it, what do I need?
 You need a *nix based machine with [SOX](http://sox.sourceforge.net/) with mp3 handler (libsox-fmt-mp3) installed on it.
 
-Currenty, the script is tested only on Ubuntu 13.10
+Currenty, the script is tested on Ubuntu 13.10 (Saucy Salamander) and Debian GNU/Linux 7 (Wheezy)
 
-### Installation tutorial for Ubuntu 13.10
+## Installation tutorial for Saucy Salamander and Wheezy
 
 ```bash
 sudo apt-get install sox
