@@ -23,7 +23,7 @@ while true; do
     #play random mp3
     if awk "BEGIN {exit !($volume > $BARK_LOUDNESS)}"
     then
-      mp3=$(find $MP3_DIR -name \*.mp3 -print | shuf -n 1)
+      mp3=$(find "$MP3_DIR" -name \*.mp3 -print | shuf -n 1)
       play "$mp3"
     fi;
   fi;
