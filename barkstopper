@@ -5,7 +5,7 @@ SCRIPTPATH=$(cd ${0%/*} && pwd -P)
 CONFIGFILE=$SCRIPTPATH/barkstopper.config
 
 if [ ! -f $CONFIGFILE ]; then
-  echo "Configuration file not found!"
+  echo "Configuration file (barkstopper.config) not found!"
   exit 1;
 else
   source $SCRIPTPATH/barkstopper.config
