@@ -7,24 +7,31 @@ CONFIGFILE=$SCRIPTPATH/barkstopper.config
 if [ ! -f $CONFIGFILE ]; then
   echo "Configuration file not found!"
   exit 1;
-else 
+else
   source $SCRIPTPATH/barkstopper.config
 fi;
 
 #sample the mic input
 while true; do
   volume=$(rec -n stat trim 0 $SAMPLING_PERIOD 2>&1 | awk '/^Maximum amplitude/ { print $3 }')
-  
-  if [ $VERBOSE_MODE -eq 1 ]; then  
+
+  if [ $VERBOSE_MODE -eq 1 ]; then
     echo $volume
   fi;
-  
+
   if [ $BARK_LOUDNESS ]; then
     #play random mp3
     if awk "BEGIN {exit !($volume > $BARK_LOUDNESS)}"
     then
       mp3=$(find "$MP3_DIR" -name \*.mp3 -print | shuf -n 1)
-      play "$mp3"
+
+      if [ "$mp3" ]; then
+        play "$mp3" -t alsa
+      else
+        echo "I would play the song now if I only had some .mp3 files!"
+        echo "Configure songs directory or add some .mp3 files to this directory!"
+        exit 1;
+      fi;
     fi;
   fi;
 done
