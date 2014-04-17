@@ -1,5 +1,31 @@
 #!/bin/bash
 
+#predefine functions
+play_mp3() {
+  mp3=$(find "$MP3_DIR" -name \*.mp3 -print | shuf -n 1)
+
+  if [ "$mp3" ] && [ -z "$mp3_process_pid" ]; then
+    play "$mp3" -t alsa &
+    mp3_process_pid=$!
+  elif [ "$mp3" ] && [ "$mp3_process_pid" ]; then
+    #debugging
+    stop_mp3
+  elif [ -z "$mp3" ]; then
+    echo "I would play the song now if I only had some .mp3 files!"
+    echo "Configure songs directory or add some .mp3 files to this directory!"
+    exit 1;
+  fi;
+}
+
+stop_mp3() {
+  kill $mp3_process_pid;
+  mp3_process_pid=
+}
+
+listen_port() {
+  nc -k -l 4444
+}
+
 #load configuration
 SCRIPTPATH=$(cd ${0%/*} && pwd -P)
 CONFIGFILE=$SCRIPTPATH/barkstopper.config
@@ -14,6 +40,7 @@ fi;
 #sample the mic input
 while true; do
   volume=$(rec -n stat trim 0 $SAMPLING_PERIOD 2>&1 | awk '/^Maximum amplitude/ { print $3 }')
+  mp3=$(find "$MP3_DIR" -name \*.mp3 -print | shuf -n 1)
 
   if [ $VERBOSE_MODE -eq 1 ]; then
     echo $volume
@@ -23,15 +50,7 @@ while true; do
     #play random mp3
     if awk "BEGIN {exit !($volume > $BARK_LOUDNESS)}"
     then
-      mp3=$(find "$MP3_DIR" -name \*.mp3 -print | shuf -n 1)
-
-      if [ "$mp3" ]; then
-        play "$mp3" -t alsa
-      else
-        echo "I would play the song now if I only had some .mp3 files!"
-        echo "Configure songs directory or add some .mp3 files to this directory!"
-        exit 1;
-      fi;
+      play_mp3
     fi;
   fi;
 done
