@@ -1,7 +1,9 @@
 #!/bin/bash
 
 handle_request() {
-  echo $1
+  if [ "$1" == "/next_track" ]; then
+    echo "NEXT TRACK"
+  fi
 }
 
 serve_static() {
@@ -19,11 +21,6 @@ start_server() {
   server_process_pid=$!
   echo "starting server"
 }
-
-#create fifo for piping network data
-if [ ! -f "/tmp/ncloop" ]; then
-  mkfifo "/tmp/ncloop"
-fi
 
 while true; do
   #echo "things"
