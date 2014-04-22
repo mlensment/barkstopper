@@ -1,12 +1,10 @@
 #!/bin/bash
 
 start_server() {
-  { echo -ne "HTTP/1.0 200 OK\r\nContent-Length: $(wc -c <index.html)\r\n\r\n"; cat index.html; } | nc -l -p 8080 -i 1 &
+  { echo -ne "HTTP/1.0 200 OK\r\nContent-Length: $(wc -c <index.html)\r\n\r\n"; cat index.html; } | nc -l -p 9000 -i 1 &
   server_process_pid=$!
   echo "starting server"
 }
-
-
 
 while true; do
   #check if pid does not exists

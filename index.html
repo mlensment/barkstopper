@@ -7,8 +7,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
   <body>
-    <form method="post" action="localhost:8080">
+    <form method="post" action="localhost:9000">
       <input type="submit" value="stop" />
     </form>
+
+    <script>
+      function play_next_track() {
+        post('/next_track');
+      }
+
+      function post(path) {
+        var r = new XMLHttpRequest();
+        r.open("POST", path, true);
+        r.onreadystatechange = function () {
+          if (r.readyState != 4 || r.status != 200) return;
+          console.log(r.responseText);
+        };
+        r.send("a=0");
+      }
+
+    </script>
   </body>
 </html>
