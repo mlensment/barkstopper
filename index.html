@@ -5,15 +5,22 @@
     <title></title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type="text/css">
+      #next {background: green; height: 50%; margin: auto;}
+    </style>
   </head>
   <body>
-    <form method="post" action="localhost:9000">
-      <input type="submit" value="stop" />
-    </form>
+    <div id="next">NEXT</div>
+
+    <div id="stop">STOP</div>
 
     <script>
       function play_next_track() {
         post('/next_track');
+      }
+
+      function stop() {
+        post('/stop');
       }
 
       function post(path) {
