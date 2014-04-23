@@ -5,10 +5,14 @@
 shuffle_and_play_mp3() {
   mp3=$(find "$MP3_DIR" -name \*.mp3 -print | shuf -n 1)
 
+  mp3_process_pid=$(pidof play)
+
+  echo "STARTING MP3"
+  echo "MP3 $mp3"
+  echo "$mp3_process_pid"
+
   if [ "$mp3" ] && [ -z "$mp3_process_pid" ]; then
     play "$mp3" -t alsa &
-    export mp3_process_pid=$!
-    echo "MP3 process pid is $mp3_process_pid"
   elif [ -z "$mp3" ]; then
     echo "I would play the song now if I only had some .mp3 files!"
     echo "Configure songs directory or add some .mp3 files to this directory!"
@@ -17,10 +21,11 @@ shuffle_and_play_mp3() {
 }
 
 stop_mp3() {
+  mp3_process_pid=$(pidof play)
+
   if [ $mp3_process_pid ]; then
     echo "KILLING MP3"
-    echo $mp3_process_pid
-    kill $mp3_process_pid
+    kill -9 $mp3_process_pid; wait
     mp3_process_pid=
   fi
 }
@@ -47,7 +52,7 @@ start_server() {
   # bit hackish way to pipe incoming request to handle_request method,
   # but named pipe did not work on my slow debian (fifo) and
   # process substitution did not give any results at all
-  serve_static | nc -l -p 9000 | (read METHOD URI PROTOCOL; handle_request "$URI") &
+  serve_static | nc -l -p 9000 -i 1 | (read METHOD URI PROTOCOL; handle_request "$URI") &
   server_process_pid=$!
   echo "starting server"
 }
