@@ -5,13 +5,11 @@
 shuffle_and_play_mp3() {
   mp3=$(find "$MP3_DIR" -name \*.mp3 -print | shuf -n 1)
 
-  mp3_process_pid=$(pidof play)
+  mp3_process_pid=$(get_mp3_pid)
 
   echo "STARTING MP3"
-  echo "MP3 $mp3"
-  echo "$mp3_process_pid"
 
-  if [ "$mp3" ] && [ -z "$mp3_process_pid" ]; then
+  if [ "$mp3" ] && [ -z "$(get_mp3_pid)" ]; then
     play "$mp3" -t alsa &
   elif [ -z "$mp3" ]; then
     echo "I would play the song now if I only had some .mp3 files!"
@@ -21,13 +19,14 @@ shuffle_and_play_mp3() {
 }
 
 stop_mp3() {
-  mp3_process_pid=$(pidof play)
-
-  if [ $mp3_process_pid ]; then
+  if [ "$(get_mp3_pid)" ]; then
     echo "KILLING MP3"
-    kill -9 $mp3_process_pid; wait
-    mp3_process_pid=
+    kill -9 $(get_mp3_pid)
   fi
+}
+
+get_mp3_pid() {
+  echo $(ps aux | grep -i "[p]lay.*-t alsa" | awk "{ print \$2}")
 }
 
 monitor_audio() {
@@ -56,8 +55,6 @@ start_server() {
   server_process_pid=$!
   echo "starting server"
 }
-
-
 
 handle_request() {
   if [ "$1" == "/next_track" ]; then
