@@ -1,7 +1,9 @@
 # Barkstopper
 
 ## What does this script do?
-This script will play music, when your dogs starts barking loudly.
+This script will play music, when your dogs starts barking loudly. For further comfort, you can easily stop or start music with your mobile device. This is extra handy at night when the computer is too far and your phone is close.
+
+To control music with you smartphone, just launch the barkstopper, open up browser with your phone and navigate to the address displayed in the script output (usually your local IP with port 9000).
 
 ## Why do I need it?
 We have a dog. When he hears a slightest noise at night, he has no second thoughts and starts barking. Only thing that calms him down is music, really.
@@ -26,3 +28,8 @@ nano barkstopper.config
 ```
 
 Further instructions can be found in the configuration file itself.
+
+
+## Known issues
+Sometimes the GUI does not open at once. Calmly refresh the webpage and do not spam the refresh button.
+Webserver is embedded into barkstopper script and is not meant for heavy refreshing action.

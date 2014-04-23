@@ -1,5 +1,183 @@
 #!/bin/bash
 
+## audio related functions ##
+
+shuffle_and_play_mp3() {
+  mp3=$(find "$MP3_DIR" -name \*.mp3 -print | shuf -n 1)
+
+  if [ "$mp3" ] && [ -z "$(get_mp3_pid)" ]; then
+    play "$mp3" -t alsa &
+  elif [ -z "$mp3" ]; then
+    echo "I would play the song now if I only had some .mp3 files!"
+    echo "Configure songs directory or add some .mp3 files to this directory!"
+    exit 1;
+  fi;
+}
+
+stop_mp3() {
+  if [ "$(get_mp3_pid)" ]; then
+    kill -9 $(get_mp3_pid)
+  fi
+}
+
+# get mp3 pid dynamically, storing PID into variable caused syncing errors
+get_mp3_pid() {
+  echo $(ps aux | grep -i "[p]lay.*-t alsa" | awk "{ print \$2}")
+}
+
+monitor_audio() {
+  volume=$(rec -n stat trim 0 $SAMPLING_PERIOD 2>&1 | awk '/^Maximum amplitude/ { print $3 }')
+
+  if [ $VERBOSE_MODE -eq 1 ]; then
+    echo $volume
+  fi
+
+  if [ $BARK_LOUDNESS ] && (awk "BEGIN {exit !($volume > $BARK_LOUDNESS)}"); then
+    shuffle_and_play_mp3
+  fi
+}
+
+
+## GUI related functions ##
+
+start_server() {
+  # (nc -l -p 9000 -i 1 < ncloop | (read METHOD URI PROTOCOL ; echo $URI) > ncloop) & #does not work on my debian
+  # (nc -l -p 9000 -i 1 < <(read METHOD URI PROTOCOL ; echo "path: $URI")) & # does not work at all
+
+  # bit hackish way to pipe incoming request to handle_request method (serves static every time),
+  # but named pipe did not work on my slow debian (fifo) and
+  # process substitution did not give any results at all
+  serve_static | nc -l -p $GUI_PORT -i 1 2> /dev/null | (read METHOD URI PROTOCOL; handle_request "$URI") &
+  server_process_pid=$!
+}
+
+handle_request() {
+  if [ "$1" == "/next_track" ]; then
+    stop_mp3
+    shuffle_and_play_mp3
+  elif [ "$1" == "/stop" ]; then
+    stop_mp3
+  fi
+}
+
+monitor_server() {
+  #check if server process is not present, start server
+  if (! kill -s 0 $server_process_pid 2> /dev/null); then
+    start_server
+  fi
+}
+
+serve_static() {
+  html=$(cat <<EOF
+<!DOCTYPE html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type="text/css">
+      html, body {
+        height: 100%;
+        font-family: Arial;
+        cursor: pointer;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+
+      #next, #stop {
+        background: #F7FFEB;
+        height: 50%;
+        position: relative;
+        display: table;
+        width: 100%;
+        text-align: center;
+      }
+
+      #stop {
+        background: #FFEBEB;
+      }
+
+      #stop:hover {
+        background: #FFE0E0;
+      }
+
+      #stop:active {
+        background: #F0AFAF;
+      }
+
+      #next:hover {
+        background: #ECFFCF;
+      }
+
+      #next:active {
+        background: #D1EDA6;
+      }
+
+      #next div, #stop div {
+        #position: absolute;
+        #top: 50%;
+        display: table-cell;
+        vertical-align: middle;
+        color: green;
+      }
+
+      #stop div {
+        color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="next">
+      <div>NEXT</div>
+    </div>
+
+    <div id="stop">
+      <div>STOP</div>
+    </div>
+
+    <script>
+      document.getElementById("next").onmousedown = function () {
+        play_next_track();
+      };
+
+      document.getElementById("stop").onmousedown = function () {
+          stop();
+      };
+
+      function play_next_track() {
+        post('/next_track');
+      }
+
+      function stop() {
+        post('/stop');
+      }
+
+      function post(path) {
+        var r = new XMLHttpRequest();
+        r.open("POST", path, true);
+        r.onreadystatechange = function () {
+          if (r.readyState != 4 || r.status != 200) return;
+        };
+        r.send("a=0");
+      }
+    </script>
+  </body>
+</html>
+EOF
+  )
+
+  echo -ne "HTTP/1.0 200 OK\r\n\r\n"; echo "$html";
+}
+
+get_ip() {
+  echo $(ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1')
+}
+
 #load configuration
 SCRIPTPATH=$(cd ${0%/*} && pwd -P)
 CONFIGFILE=$SCRIPTPATH/barkstopper.config
@@ -11,27 +189,10 @@ else
   source $SCRIPTPATH/barkstopper.config
 fi;
 
+echo "Too see the GUI, open this URL: http://$(get_ip):$GUI_PORT on any device in the local network."
+
 #sample the mic input
 while true; do
-  volume=$(rec -n stat trim 0 $SAMPLING_PERIOD 2>&1 | awk '/^Maximum amplitude/ { print $3 }')
-
-  if [ $VERBOSE_MODE -eq 1 ]; then
-    echo $volume
-  fi;
-
-  if [ $BARK_LOUDNESS ]; then
-    #play random mp3
-    if awk "BEGIN {exit !($volume > $BARK_LOUDNESS)}"
-    then
-      mp3=$(find "$MP3_DIR" -name \*.mp3 -print | shuf -n 1)
-
-      if [ "$mp3" ]; then
-        play "$mp3" -t alsa
-      else
-        echo "I would play the song now if I only had some .mp3 files!"
-        echo "Configure songs directory or add some .mp3 files to this directory!"
-        exit 1;
-      fi;
-    fi;
-  fi;
+  monitor_audio
+  monitor_server
 done
