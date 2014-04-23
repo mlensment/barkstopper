@@ -47,7 +47,7 @@ start_server() {
   # bit hackish way to pipe incoming request to handle_request method (serves static every time),
   # but named pipe did not work on my slow debian (fifo) and
   # process substitution did not give any results at all
-  serve_static | nc -l -p $GUI_PORT -i 1 2> /dev/null | (read METHOD URI PROTOCOL; handle_request "$URI") &
+  serve_static | nc -l -p $GUI_PORT -q 1 2> /dev/null | (read METHOD URI PROTOCOL; handle_request "$URI") &
   server_process_pid=$!
 }
 
@@ -189,9 +189,8 @@ else
   source $SCRIPTPATH/barkstopper.config
 fi;
 
-echo "Too see the GUI, open this URL: http://$(get_ip):$GUI_PORT on any device in the local network."
+echo "To see the GUI, open this URL: http://$(get_ip):$GUI_PORT on any device in the local network."
 
-#sample the mic input
 while true; do
   monitor_audio
   monitor_server
